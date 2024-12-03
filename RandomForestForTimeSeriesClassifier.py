@@ -303,7 +303,7 @@ def _parallel_build_trees_with_blocks(
         pivote = np.random.randint(n_samples)
         sample_counts = [0] * n_samples
         for i in range(block_size):
-            sample_counts[(pivote + i) % n_samples] = 1
+            sample_counts[(pivote + i) % n_samples] = int(n_samples // block_size)
         curr_sample_weight *= sample_counts
 
 
