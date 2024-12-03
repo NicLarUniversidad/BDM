@@ -294,7 +294,6 @@ def _parallel_build_trees_with_blocks(
 
         # Acá le da pesos a los datos de forma aleatoria
         # Se puede modificar acá así se le da peso a uno y a los N siguientes...
-        # TODO: Modificar
         # indices = _generate_sample_indices(
         #     tree.random_state, n_samples, n_samples_bootstrap
         # )
