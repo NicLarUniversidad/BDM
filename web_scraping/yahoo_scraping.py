@@ -13,23 +13,22 @@ def getByTicker(ticker):
         history0 = pageDownloadHandler.download(url)
     return history0
 
-def appendToFile(dataDict, fileName):
+def appendToFile(dataDict, fileName, ticker):
     f = open(fileName, 'a')
     for key in dataDict:
-        f.write(f"{key},{dataDict[key][0]},{dataDict[key][1]},{dataDict[key][2]},{dataDict[key][3]},{dataDict[key][4]}\n")
+        f.write(f"{key},{ticker},{dataDict[key][0]},{dataDict[key][1]},{dataDict[key][2]},{dataDict[key][3]},{dataDict[key][4]}\n")
     f.close()
 
 f = open("yahoo_dataset.csv", "w")
-f.write("date,open,high,low,close,adj_close\n")
+f.write("date,ticker,open,high,low,close,adj_close\n")
 f.close()
 f0 = open("yahoo_void.csv", "w")
-
 dataset = pd.read_csv('../datasets/sp_500_stocks/sp500_companies.csv')
 for index, row in dataset.iterrows():
     symbol = row["Symbol"]
     history = getByTicker(symbol)
     if history:
-        appendToFile(history, "yahoo_dataset.csv")
+        appendToFile(history, "yahoo_dataset.csv", symbol)
     else:
         f0.write(f"{symbol}\n")
     print(f"Procesado: {symbol} {index} de 500")
