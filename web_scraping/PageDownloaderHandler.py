@@ -21,7 +21,7 @@ class PageDownloadHandler(object):
                         count = 0
                     else:
                         if count % 7 == 0:
-                            history[row[0]] = (row[1], row[2], row[3], row[4], row[5])
+                            history[row[0]] = (row[1], row[2], row[3], row[4], row[5], t.text.replace(",", ""))
                             row = []
                         else:
                             row.append(t.text)
