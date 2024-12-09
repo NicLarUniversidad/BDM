@@ -301,20 +301,20 @@ def _parallel_build_trees_with_blocks(
         #sample_counts = [peso índice 0, peso índice 1, ..., peso índice N]
         pivote = np.random.randint(n_samples)
         sample_counts = [0] * n_samples
+        indices = []
         for i in range(block_size):
             sample_counts[(pivote + i) % n_samples] = int(n_samples // block_size)
+            indices.append((pivote + i) % n_samples)
         curr_sample_weight *= sample_counts
-
 
         #########################################################################
         # No sé que hace esto pero desordena los pesos, quitar si es posible
-        # TODO: Intentar borrarlo
-        # if class_weight == "subsample":
-        #     with catch_warnings():
-        #         simplefilter("ignore", DeprecationWarning)
-        #         curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
-        # elif class_weight == "balanced_subsample":
-        #     curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
+        if class_weight == "subsample":
+            with catch_warnings():
+                simplefilter("ignore", DeprecationWarning)
+                curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
+        elif class_weight == "balanced_subsample":
+            curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
         ###########################################################################
         tree._fit(
             X,
