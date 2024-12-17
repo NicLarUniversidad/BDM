@@ -14,7 +14,7 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.parallel import Parallel
 from sklearn.utils.validation import _check_sample_weight
 MAX_INT = np.iinfo(np.int32).max
-
+BLOCK_TYPES = ["non-overlapping", "moving-window", "circular-window"]
 class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
 
     # Llamo al constructor de RandomForestClassifier
@@ -42,7 +42,8 @@ class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
             ccp_alpha=0.0,
             max_samples=None,
             monotonic_cst=None,
-            block_size=1
+            block_size=1,
+            block_type="non-overlapping"
     ):
         super().__init__(
             n_estimators=n_estimators,
@@ -66,6 +67,7 @@ class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
             monotonic_cst=monotonic_cst,
         )
         self.block_size = block_size
+        self.block_type = block_type
 
 
     # Función copypasteada desde la clase sklearn.ensemble._forest
@@ -278,7 +280,8 @@ def _parallel_build_trees_with_blocks(
     class_weight=None,
     n_samples_bootstrap=None,
     missing_values_in_feature_mask=None,
-    block_size=1
+    block_size=1,
+    block_type=BLOCK_TYPES[0]
 ):
     """
     Private function used to fit a single tree in parallel."""
@@ -299,13 +302,37 @@ def _parallel_build_trees_with_blocks(
         # )
         #sample_counts = np.bincount(indices, minlength=n_samples)
         #sample_counts = [peso índice 0, peso índice 1, ..., peso índice N]
-        pivote = np.random.randint(n_samples)
         sample_counts = [0] * n_samples
-        indices = []
-        for i in range(block_size):
-            sample_counts[(pivote + i) % n_samples] = int(n_samples // block_size)
-            indices.append((pivote + i) % n_samples)
-        curr_sample_weight *= sample_counts
+        block_count = n_samples // block_size
+        if block_type == BLOCK_TYPES[0]:
+            #Non overlapping
+            # pivot = np.random.randint(n_samples - block_size)
+            # indices = []
+            # for i in range(block_size):
+            #     sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
+            #     indices.append((pivot + i) % n_samples)
+            # curr_sample_weight *= sample_counts
+            for i in range(block_count):
+                indices = generate_block_random(block_size, n_samples)
+                for idx in indices:
+                    sample_counts[idx] += 1
+        else:
+
+            # Genero bloques con pivotes aleatorios y los junto.
+            if block_type == BLOCK_TYPES[1]:
+
+                for i in range(block_count):
+                    indices = generate_block_non_overlapping(block_size, n_samples)
+                    for idx in indices:
+                        sample_counts[idx] += 1
+
+            if block_type == BLOCK_TYPES[2]:
+
+                for i in range(block_count):
+                    indices = generate_block(block_size, n_samples)
+                    for idx in indices:
+                        sample_counts[idx] += 1
+            curr_sample_weight *= sample_counts
 
         #########################################################################
         # No sé que hace esto pero desordena los pesos, quitar si es posible
@@ -334,3 +361,25 @@ def _parallel_build_trees_with_blocks(
 
     return tree
 
+def generate_block_non_overlapping(block_size, n_samples):
+    offset = np.random.randint((n_samples // block_size) - 1)
+    #pivot = np.random.randint(n_samples - block_size)
+    indices = []
+    for i in range(block_size):
+        indices.append((offset + i))
+    return indices
+
+def generate_block(block_size, n_samples):
+    offset = np.random.randint((n_samples // block_size))
+    #pivot = np.random.randint(n_samples)
+    indices = []
+    for i in range(block_size):
+        indices.append((offset + i) % (n_samples - 1))
+    return indices
+
+def generate_block_random(block_size, n_samples):
+    pivot = np.random.randint(n_samples - block_size)
+    indices = []
+    for i in range(block_size):
+        indices.append((pivot + i))
+    return indices
