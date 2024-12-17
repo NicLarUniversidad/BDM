@@ -313,7 +313,7 @@ def _parallel_build_trees_with_blocks(
             #     indices.append((pivot + i) % n_samples)
             # curr_sample_weight *= sample_counts
             for i in range(block_count):
-                indices = generate_block_random(block_size, n_samples)
+                indices = generate_block_non_overlapping(block_size, n_samples)
                 for idx in indices:
                     sample_counts[idx] += 1
         else:
@@ -322,14 +322,14 @@ def _parallel_build_trees_with_blocks(
             if block_type == BLOCK_TYPES[1]:
 
                 for i in range(block_count):
-                    indices = generate_block_non_overlapping(block_size, n_samples)
+                    indices = generate_moving_block(block_size, n_samples)
                     for idx in indices:
                         sample_counts[idx] += 1
 
             if block_type == BLOCK_TYPES[2]:
 
                 for i in range(block_count):
-                    indices = generate_block(block_size, n_samples)
+                    indices = generate_circular_block(block_size, n_samples)
                     for idx in indices:
                         sample_counts[idx] += 1
             curr_sample_weight *= sample_counts
@@ -361,7 +361,7 @@ def _parallel_build_trees_with_blocks(
 
     return tree
 
-def generate_block_non_overlapping(block_size, n_samples):
+def generate_moving_block(block_size, n_samples):
     offset = np.random.randint((n_samples // block_size) - 1)
     #pivot = np.random.randint(n_samples - block_size)
     indices = []
@@ -369,7 +369,7 @@ def generate_block_non_overlapping(block_size, n_samples):
         indices.append((offset + i))
     return indices
 
-def generate_block(block_size, n_samples):
+def generate_circular_block(block_size, n_samples):
     offset = np.random.randint((n_samples // block_size))
     #pivot = np.random.randint(n_samples)
     indices = []
@@ -377,7 +377,7 @@ def generate_block(block_size, n_samples):
         indices.append((offset + i) % (n_samples - 1))
     return indices
 
-def generate_block_random(block_size, n_samples):
+def generate_block_non_overlapping(block_size, n_samples):
     pivot = np.random.randint(n_samples - block_size)
     indices = []
     for i in range(block_size):
