@@ -336,12 +336,12 @@ def _parallel_build_trees_with_blocks(
 
         #########################################################################
         # No sé que hace esto pero desordena los pesos, quitar si es posible
-        if class_weight == "subsample":
-            with catch_warnings():
-                simplefilter("ignore", DeprecationWarning)
-                curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
-        elif class_weight == "balanced_subsample":
-            curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
+        # if class_weight == "subsample":
+        #     with catch_warnings():
+        #         simplefilter("ignore", DeprecationWarning)
+        #         curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
+        # elif class_weight == "balanced_subsample":
+        #     curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
         ###########################################################################
         tree._fit(
             X,
