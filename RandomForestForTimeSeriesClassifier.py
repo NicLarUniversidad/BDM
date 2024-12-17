@@ -14,7 +14,7 @@ from sklearn.utils.multiclass import type_of_target
 from sklearn.utils.parallel import Parallel
 from sklearn.utils.validation import _check_sample_weight
 MAX_INT = np.iinfo(np.int32).max
-BLOCK_TYPES = ["non-overlapping", "moving-window", "circular-window"]
+BLOCK_TYPES = ["non-overlapping", "moving-block", "circular-block"]
 class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
 
     # Llamo al constructor de RandomForestClassifier
