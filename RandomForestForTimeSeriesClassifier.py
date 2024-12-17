@@ -303,21 +303,21 @@ def _parallel_build_trees_with_blocks(
         #sample_counts = np.bincount(indices, minlength=n_samples)
         #sample_counts = [peso índice 0, peso índice 1, ..., peso índice N]
         sample_counts = [0] * n_samples
-        block_count = n_samples // block_size
         if block_type == BLOCK_TYPES[0]:
             #Non overlapping
-            # pivot = np.random.randint(n_samples - block_size)
-            # indices = []
-            # for i in range(block_size):
-            #     sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
-            #     indices.append((pivot + i) % n_samples)
-            # curr_sample_weight *= sample_counts
-            for i in range(block_count):
-                indices = generate_block_non_overlapping(block_size, n_samples)
-                for idx in indices:
-                    sample_counts[idx] += 1
+            pivot = np.random.randint(n_samples - block_size)
+            indices = []
+            for i in range(block_size):
+                sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
+                indices.append((pivot + i) % n_samples)
+            curr_sample_weight *= sample_counts
+            # for i in range(block_count):
+            #     indices = generate_block_non_overlapping(block_size, n_samples)
+            #     for idx in indices:
+            #         sample_counts[idx] += 1
         else:
 
+            block_count = n_samples // block_size
             # Genero bloques con pivotes aleatorios y los junto.
             if block_type == BLOCK_TYPES[1]:
 
