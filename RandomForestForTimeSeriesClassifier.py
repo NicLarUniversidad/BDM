@@ -227,6 +227,7 @@ class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
                     class_weight=self.class_weight,
                     n_samples_bootstrap=n_samples_bootstrap,
                     missing_values_in_feature_mask=missing_values_in_feature_mask,
+                    block_type=self.block_type
                 )
                 for i, t in enumerate(trees)
             )
@@ -303,35 +304,39 @@ def _parallel_build_trees_with_blocks(
         #sample_counts = np.bincount(indices, minlength=n_samples)
         #sample_counts = [peso índice 0, peso índice 1, ..., peso índice N]
         sample_counts = [0] * n_samples
+        indices = []
+        block_count = n_samples // block_size
         if block_type == BLOCK_TYPES[0]:
             #Non overlapping
-            pivot = np.random.randint(n_samples - block_size)
-            indices = []
-            for i in range(block_size):
-                sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
-                indices.append((pivot + i) % n_samples)
-            curr_sample_weight *= sample_counts
-            # for i in range(block_count):
-            #     indices = generate_block_non_overlapping(block_size, n_samples)
-            #     for idx in indices:
-            #         sample_counts[idx] += 1
+            # pivot = np.random.randint(n_samples - block_size)
+            # for i in range(block_size):
+            #     sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
+            #     indices.append((pivot + i) % n_samples)
+            # curr_sample_weight *= sample_counts
+            for i in range(block_count):
+                indices0 = generate_block_non_overlapping(block_size, n_samples)
+                for idx in indices0:
+                    sample_counts[idx] = 1
+                    # if idx not in indices:
+                    #     indices.append(idx)
         else:
 
-            block_count = n_samples // block_size
             # Genero bloques con pivotes aleatorios y los junto.
             if block_type == BLOCK_TYPES[1]:
 
                 for i in range(block_count):
-                    indices = generate_moving_block(block_size, n_samples)
-                    for idx in indices:
+                    indices0 = generate_moving_block(block_size, n_samples)
+                    for idx in indices0:
                         sample_counts[idx] += 1
+                        indices.append(idx)
 
             if block_type == BLOCK_TYPES[2]:
 
                 for i in range(block_count):
-                    indices = generate_circular_block(block_size, n_samples)
-                    for idx in indices:
+                    indices0 = generate_circular_block(block_size, n_samples)
+                    for idx in indices0:
                         sample_counts[idx] += 1
+                        indices.append(idx)
             curr_sample_weight *= sample_counts
 
         #########################################################################
