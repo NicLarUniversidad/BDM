@@ -220,7 +220,7 @@ class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
                     self.bootstrap,
                     X,
                     y,
-                    sample_weight,
+                    None,
                     i,
                     len(trees),
                     verbose=self.verbose,
@@ -317,8 +317,8 @@ def _parallel_build_trees_with_blocks(
                 indices0 = generate_block_non_overlapping(block_size, n_samples)
                 for idx in indices0:
                     sample_counts[idx] = 1
-                    # if idx not in indices:
-                    #     indices.append(idx)
+                    if idx not in indices:
+                        indices.append(idx)
         else:
 
             # Genero bloques con pivotes aleatorios y los junto.
@@ -327,7 +327,7 @@ def _parallel_build_trees_with_blocks(
                 for i in range(block_count):
                     indices0 = generate_moving_block(block_size, n_samples)
                     for idx in indices0:
-                        sample_counts[idx] += 1
+                        sample_counts[idx] = 1
                         indices.append(idx)
 
             if block_type == BLOCK_TYPES[2]:
@@ -335,18 +335,18 @@ def _parallel_build_trees_with_blocks(
                 for i in range(block_count):
                     indices0 = generate_circular_block(block_size, n_samples)
                     for idx in indices0:
-                        sample_counts[idx] += 1
+                        sample_counts[idx] = 1
                         indices.append(idx)
             curr_sample_weight *= sample_counts
 
         #########################################################################
         # No sé que hace esto pero desordena los pesos, quitar si es posible
-        # if class_weight == "subsample":
-        #     with catch_warnings():
-        #         simplefilter("ignore", DeprecationWarning)
-        #         curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
-        # elif class_weight == "balanced_subsample":
-        #     curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
+        if class_weight == "subsample":
+            with catch_warnings():
+                simplefilter("ignore", DeprecationWarning)
+                curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
+        elif class_weight == "balanced_subsample":
+            curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
         ###########################################################################
         tree._fit(
             X,
@@ -375,7 +375,7 @@ def generate_moving_block(block_size, n_samples):
     return indices
 
 def generate_circular_block(block_size, n_samples):
-    offset = np.random.randint((n_samples // block_size))
+    offset = np.random.randint(n_samples // block_size)
     #pivot = np.random.randint(n_samples)
     indices = []
     for i in range(block_size):
