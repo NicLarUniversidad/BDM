@@ -227,7 +227,8 @@ class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
                     class_weight=self.class_weight,
                     n_samples_bootstrap=n_samples_bootstrap,
                     missing_values_in_feature_mask=missing_values_in_feature_mask,
-                    block_type=self.block_type
+                    block_type=self.block_type,
+                    block_size=self.block_size,
                 )
                 for i, t in enumerate(trees)
             )
@@ -289,85 +290,79 @@ def _parallel_build_trees_with_blocks(
     if verbose > 1:
         print("building tree %d of %d" % (tree_idx + 1, n_trees))
 
-    if bootstrap:
-        n_samples = X.shape[0]
-        if sample_weight is None:
-            curr_sample_weight = np.ones((n_samples,), dtype=np.float64)
-        else:
-            curr_sample_weight = sample_weight.copy()
-
-        # Acá le da pesos a los datos de forma aleatoria
-        # Se puede modificar acá así se le da peso a uno y a los N siguientes...
-        # indices = _generate_sample_indices(
-        #     tree.random_state, n_samples, n_samples_bootstrap
-        # )
-        #sample_counts = np.bincount(indices, minlength=n_samples)
-        #sample_counts = [peso índice 0, peso índice 1, ..., peso índice N]
-        sample_counts = [0] * n_samples
-        indices = []
-        block_count = n_samples // block_size
-        if block_type == BLOCK_TYPES[0]:
-            #Non overlapping
-            # pivot = np.random.randint(n_samples - block_size)
-            # for i in range(block_size):
-            #     sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
-            #     indices.append((pivot + i) % n_samples)
-            # curr_sample_weight *= sample_counts
-            for i in range(block_count):
-                indices0 = generate_block_non_overlapping(block_size, n_samples)
-                for idx in indices0:
-                    sample_counts[idx] = 1
-                    if idx not in indices:
-                        indices.append(idx)
-        else:
-
-            # Genero bloques con pivotes aleatorios y los junto.
-            if block_type == BLOCK_TYPES[1]:
-
-                for i in range(block_count):
-                    indices0 = generate_moving_block(block_size, n_samples)
-                    for idx in indices0:
-                        sample_counts[idx] = 1
-                        indices.append(idx)
-
-            if block_type == BLOCK_TYPES[2]:
-
-                for i in range(block_count):
-                    indices0 = generate_circular_block(block_size, n_samples)
-                    for idx in indices0:
-                        sample_counts[idx] = 1
-                        indices.append(idx)
-            curr_sample_weight *= sample_counts
-
-        #########################################################################
-        # No sé que hace esto pero desordena los pesos, quitar si es posible
-        if class_weight == "subsample":
-            with catch_warnings():
-                simplefilter("ignore", DeprecationWarning)
-                curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
-        elif class_weight == "balanced_subsample":
-            curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
-        ###########################################################################
-        tree._fit(
-            X,
-            y,
-            sample_weight=curr_sample_weight,
-            check_input=False,
-            missing_values_in_feature_mask=missing_values_in_feature_mask,
-        )
+    n_samples = X.shape[0]
+    if sample_weight is None:
+        curr_sample_weight = np.ones((n_samples,), dtype=np.float64)
     else:
-        tree._fit(
-            X,
-            y,
-            sample_weight=sample_weight,
-            check_input=False,
-            missing_values_in_feature_mask=missing_values_in_feature_mask,
-        )
+        curr_sample_weight = sample_weight.copy()
+
+    # Acá le da pesos a los datos de forma aleatoria
+    # Se puede modificar acá así se le da peso a uno y a los N siguientes...
+    # indices = _generate_sample_indices(
+    #     tree.random_state, n_samples, n_samples_bootstrap
+    # )
+    #sample_counts = np.bincount(indices, minlength=n_samples)
+    #sample_counts = [peso índice 0, peso índice 1, ..., peso índice N]
+    #sample_counts = [0] * n_samples
+    indices = []
+    block_count = n_samples // block_size
+    if block_type == BLOCK_TYPES[0]:
+        #Non overlapping
+        # pivot = np.random.randint(n_samples - block_size)
+        # for i in range(block_size):
+        #     sample_counts[(pivot + i) % n_samples] = int(n_samples // block_size)
+        #     indices.append((pivot + i) % n_samples)
+        # curr_sample_weight *= sample_counts
+        for i in range(block_count):
+            indices0 = generate_block_non_overlapping(block_size, n_samples)
+            for idx in indices0:
+                #sample_counts[idx] += 1
+                if idx not in indices:
+                    indices.append(idx)
+    else:
+
+        # Genero bloques con pivotes aleatorios y los junto.
+        if block_type == BLOCK_TYPES[1]:
+
+            for i in range(block_count):
+                indices0 = generate_moving_block(block_size, n_samples)
+                for idx in indices0:
+                    #sample_counts[idx] += 1
+                    indices.append(idx)
+
+        if block_type == BLOCK_TYPES[2]:
+
+            for i in range(block_count):
+                indices0 = generate_circular_block(block_size, n_samples)
+                for idx in indices0:
+                    #sample_counts[idx] += 1
+                    indices.append(idx)
+
+    sample_counts = np.bincount(indices, minlength=n_samples)
+    curr_sample_weight *= sample_counts
+
+    #########################################################################
+    # No sé que hace esto pero desordena los pesos, quitar si es posible
+    if class_weight == "subsample":
+        with catch_warnings():
+            simplefilter("ignore", DeprecationWarning)
+            curr_sample_weight *= compute_sample_weight("auto", y, indices=indices)
+    elif class_weight == "balanced_subsample":
+        curr_sample_weight *= compute_sample_weight("balanced", y, indices=indices)
+    ###########################################################################
+    tree._fit(
+        X,
+        y,
+        sample_weight=curr_sample_weight,
+        check_input=False,
+        missing_values_in_feature_mask=missing_values_in_feature_mask,
+    )
 
     return tree
 
 def generate_moving_block(block_size, n_samples):
-    offset = np.random.randint((n_samples // block_size) - 1)
+    k = n_samples // block_size
+    offset = np.random.randint(k) * block_size
     #pivot = np.random.randint(n_samples - block_size)
     indices = []
     for i in range(block_size):
@@ -375,11 +370,13 @@ def generate_moving_block(block_size, n_samples):
     return indices
 
 def generate_circular_block(block_size, n_samples):
-    offset = np.random.randint(n_samples // block_size)
+    k = n_samples // block_size
+    n = 2
+    offset = np.random.randint(k * n) * block_size
     #pivot = np.random.randint(n_samples)
     indices = []
     for i in range(block_size):
-        indices.append((offset + i) % (n_samples - 1))
+        indices.append((offset + i) % n_samples)
     return indices
 
 def generate_block_non_overlapping(block_size, n_samples):
