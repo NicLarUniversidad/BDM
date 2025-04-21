@@ -21,7 +21,7 @@
 
 Además de Python y las librerías de Pandas, Sklearn.
 Se requiere descargar el dataset https://www.kaggle.com/datasets/andrewmvd/sp-500-stocks/data.
-Guardar los archivo en el sigueinte directorio.
+Guardar los archivos en el sigueinte directorio.
         
         datasets/sp_500_stocks
 
