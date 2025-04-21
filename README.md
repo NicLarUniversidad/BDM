@@ -25,4 +25,4 @@ Guardar los archivos en el sigueinte directorio.
         
         datasets/sp_500_stocks
 
-También se puede guardar en otra carpeta pero se debe configurar las notebooks en las primeras líneas, así buscar el archivo sp500_index.csv correctamente.
+También se puede guardar en otra carpeta pero se debe configurar las notebooks en las primeras líneas, así busca el archivo sp500_index.csv correctamente.
