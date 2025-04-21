@@ -18,7 +18,7 @@ BLOCK_TYPES = ["non-overlapping", "moving-block", "circular-block"]
 class RandomForestForTimeSeriesClassifier(RandomForestClassifier):
 
     # Llamo al constructor de RandomForestClassifier
-    # Necesario porque quiero una variable con el tamaño de bloques
+    # Necesario porque se requiere una variable con el tamaño de bloques
     # block_size
     def __init__(
             self,

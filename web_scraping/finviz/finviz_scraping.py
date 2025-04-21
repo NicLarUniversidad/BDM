@@ -14,17 +14,17 @@ def scrap_by_ticker(ticker):
     closes = jsonData['close']
     highs = jsonData['high']
     lows = jsonData['low']
-    f0 = open("finviz_dataset.csv" ,"a")
+    f0 = open("finviz_dataset_spy.csv" ,"a")
     for i in range (len(volumes)):
         f0.write(f"{dates[i]},{ticker},{opens[i]},{closes[i]},{highs[i]},{lows[i]},{volumes[i]}\n")
     f0.close()
 
-f = open("finviz_dataset.csv" ,"w")
-f.write("date,ticker,open,close,high,low,volume\n")
+f = open("finviz_dataset_spy.csv" ,"w")
+f.write("Date,Ticker,Open,Close,High,Low,Volume\n")
 f.close()
 dataset = pd.read_csv('../../datasets/sp_500_stocks/sp500_companies.csv')
-for index, row in dataset.iterrows():
-    symbol = row["Symbol"]
-    scrap_by_ticker(symbol)
-    print(f"Procesado: {symbol} {index} de 500")
-    time.sleep(5)
+#for index, row in dataset.iterrows():
+symbol = "SPY" #row["Symbol"]
+scrap_by_ticker(symbol)
+#print(f"Procesado: {symbol} {index} de 500")
+#time.sleep(5)

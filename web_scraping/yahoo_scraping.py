@@ -14,21 +14,25 @@ def getByTicker(ticker):
 def appendToFile(dataDict, fileName, ticker):
     f = open(fileName, 'a')
     for key in dataDict:
+        strData = []
+        for i in range(6):
+            strData.append(f"{dataDict[key][i]}".replace(",", ""))
+        dataDict[key] = strData
         f.write(f"{key},{ticker},{dataDict[key][0]},{dataDict[key][1]},{dataDict[key][2]},{dataDict[key][3]},{dataDict[key][4]},{dataDict[key][5]}\n")
     f.close()
 
-f = open("yahoo_dataset.csv", "w")
-f.write("date,ticker,open,high,low,close,adj_close,volume\n")
+f = open("yahoo_dataset_spy.csv", "w")
+f.write("Date,Ticker,Open,High,Low,Close,Adj_close,Volume\n")
 f.close()
-f0 = open("yahoo_void.csv", "w")
+f0 = open("yahoo_void_spy.csv", "w")
 dataset = pd.read_csv('../datasets/sp_500_stocks/sp500_companies.csv')
-for index, row in dataset.iterrows():
-    symbol = row["Symbol"]
-    history = getByTicker(symbol)
-    if history:
-        appendToFile(history, "yahoo_dataset.csv", symbol)
-    else:
-        f0.write(f"{symbol}\n")
-    print(f"Procesado: {symbol} {index} de 500")
-    time.sleep(5)
+#for index, row in dataset.iterrows():
+symbol = "SPY" # row["Symbol"]
+history = getByTicker(symbol)
+if history:
+    appendToFile(history, "yahoo_dataset_spy.csv", symbol)
+else:
+    f0.write(f"{symbol}\n")
+#print(f"Procesado: {symbol} {int(index) + 1} de 500")
+#time.sleep(5)
 f0.close()
