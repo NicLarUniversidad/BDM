@@ -21,16 +21,16 @@ def appendToFile(dataDict, fileName, ticker):
         f.write(f"{key},{ticker},{dataDict[key][0]},{dataDict[key][1]},{dataDict[key][2]},{dataDict[key][3]},{dataDict[key][4]},{dataDict[key][5]}\n")
     f.close()
 
-f = open("yahoo_dataset_spy.csv", "w")
+f = open("yahoo_dataset_gspc.csv", "w")
 f.write("Date,Ticker,Open,High,Low,Close,Adj_close,Volume\n")
 f.close()
 f0 = open("yahoo_void_spy.csv", "w")
 dataset = pd.read_csv('../datasets/sp_500_stocks/sp500_companies.csv')
 #for index, row in dataset.iterrows():
-symbol = "SPY" # row["Symbol"]
+symbol = "%5EGSPC"  #"SPY" # row["Symbol"]
 history = getByTicker(symbol)
 if history:
-    appendToFile(history, "yahoo_dataset_spy.csv", symbol)
+    appendToFile(history, "yahoo_dataset_gspc.csv", symbol)
 else:
     f0.write(f"{symbol}\n")
 #print(f"Procesado: {symbol} {int(index) + 1} de 500")
