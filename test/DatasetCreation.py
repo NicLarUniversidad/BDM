@@ -37,7 +37,7 @@ def calculateFields(dataset):
         dataset = dataset.drop(columns=["date"])
     if 'Adj Close' in dataset:
         dataset = dataset.drop(columns=['Adj Close'])
-    if 'Adj Close' in dataset:
+    if 'Adj_close' in dataset:
         dataset = dataset.drop(columns=['Adj_close'])
     dataset['Date'] = pd.to_datetime(dataset['Date'])
     dataset["DateOrdinal"] = dataset["Date"].dt.strftime("%Y%m%d").astype(int)
