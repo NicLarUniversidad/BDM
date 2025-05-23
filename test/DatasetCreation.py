@@ -107,6 +107,18 @@ dataset['Down_Streak'] = compute_streaks(dataset['Down'])
 dataset['Max_Up_Streak_30'] = dataset['Up_Streak'].rolling('30D', closed='left').max()
 dataset['Max_Down_Streak_30'] = dataset['Down_Streak'].rolling('30D', closed='left').max()
 
+# media movil
+
+dataset['SMA_30'] = dataset['average_price'].rolling(window=30).mean()
+
+# disparity index
+
+dataset['Disparity_SMA_30'] = ((dataset['average_price'] - dataset['SMA_30']) / dataset['SMA_30']) * 100
+
+# EMAs Exponential Moving Average
+
+dataset['EMA_30'] = dataset['average_price'].ewm(span=30, adjust=False).mean()
+
 dataset.dropna(inplace=True)
 
 pivote_date = dt.datetime.strptime("01/01/2018", "%d/%m/%Y")
