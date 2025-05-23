@@ -109,15 +109,15 @@ dataset['Max_Down_Streak_30'] = dataset['Down_Streak'].rolling('30D', closed='le
 
 # media movil
 
-dataset['SMA_30'] = dataset['average_price'].rolling(window=30).mean()
+dataset['SMA_30'] = dataset['average_price'].rolling(window=30, closed='left').mean()
 
 # disparity index
 
-dataset['Disparity_SMA_30'] = ((dataset['average_price'] - dataset['SMA_30']) / dataset['SMA_30']) * 100
+dataset['Disparity_SMA_30'] = ((dataset['average_price'].shift(1) - dataset['SMA_30']) / dataset['SMA_30']) * 100
 
 # EMAs Exponential Moving Average
 
-dataset['EMA_30'] = dataset['average_price'].ewm(span=30, adjust=False).mean()
+dataset['EMA_30'] = dataset['average_price'].shift(1).ewm(span=30, adjust=False).mean()
 
 dataset.dropna(inplace=True)
 
