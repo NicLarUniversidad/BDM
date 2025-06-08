@@ -1,6 +1,9 @@
+import numpy as np
 import pandas as pd
 import datetime as dt
 from dateutil import parser
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
 
 dataset = pd.read_csv('yahoo_dataset_gspc.csv')
 dataset = dataset.dropna()
@@ -118,6 +121,22 @@ dataset['Disparity_SMA_30'] = ((dataset['average_price'].shift(1) - dataset['SMA
 # EMAs Exponential Moving Average
 
 dataset['EMA_30'] = dataset['average_price'].shift(1).ewm(span=30, adjust=False).mean()
+
+def calc_trend_slope(series, window=30):
+    slopes = [np.nan] * window
+    for i in range(window, len(series)):
+        y = series[i - window:i].values  # ventana que termina en ayer
+        x = np.arange(window).reshape(-1, 1)
+        model = LinearRegression().fit(x, y)
+        slopes.append(model.coef_[0])
+    return slopes
+
+# Tendencia en los últimos 30 días
+dataset['Trend_Slope_30'] = calc_trend_slope(dataset['average_price'], window=30)
+
+# Volatilidad en los ultimos 30 días
+dataset['Volatility_30'] = dataset['average_price'].rolling('30D', closed='left').std()
+
 
 dataset.dropna(inplace=True)
 
